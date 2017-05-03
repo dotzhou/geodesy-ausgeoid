@@ -2,6 +2,7 @@ import boto3
 import logging
 import logging.config
 import argparse
+import re
 import os
 
 
@@ -38,14 +39,33 @@ class Shared(object):
         try:
             # Let's use Amazon S3
             s3 = boto3.resource('s3')
+            bucket = s3.Bucket('highrate-rinex-2')
+
             os.chdir(dataFolder)
+            RINEX2_DATA = re.compile(r'^\w{4}(?P<doy>\d{3})\w{1}\d{2}\.(?P<yy>\d{2})d\.Z$', re.IGNORECASE)
             for item in os.listdir('.'):
                 if os.path.isfile(item):
                     try:
-                        with open(item, 'rb') as data:
-                            s3.Bucket('gnss-archive').put_object(Key='incoming/' + item, Body=data)
-                            cls.Logger.info("Successfully added " + item )
-                            os.remove(item)
+                        ok = re.match(RINEX2_DATA, item)
+                        if ok:
+                            yy = ok.group('yy').strip()
+                            if yy:
+                                yr = int(yy)
+                                if yr < 80:
+                                    year = 2000 + yr
+                                else:
+                                    year = 1900 + yr
+    
+                            doy = ok.group('doy').strip()
+                            if yy and doy:
+                                prefix = str(year) + "/" + yy + doy +"/"
+                                with open(item, 'rb') as data:
+                                    bucket.put_object(Key=prefix + item, Body=data)
+                                    cls.Logger.info("Successfully added " + item )
+                                    os.remove(item)
+                            else:
+                                cls.Logger.error("Incorrect naming with " + item )
+                                raise Exception( 'Incorrect rinex 2 file naming'  )
                     except OSError:
                         cls.Logger.error("Failed to open or remove " + item )
                     except:
