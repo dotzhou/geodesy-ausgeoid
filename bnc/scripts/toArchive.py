@@ -104,7 +104,7 @@ def parameters():
             help='The directory, where rinex data files will be converted')
 
     options.add_argument('-o', '--outbound',
-            default='/home/ted/BNC/outbound/aws',
+            default='/home/ted/BNC/outbound/extnas',
             help='The directory, where rinex data files will be disseminated')
 
     options.add_argument("-g", "--log",
