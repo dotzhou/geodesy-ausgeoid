@@ -58,7 +58,8 @@ class Shared(object):
     
                             doy = ok.group('doy').strip()
                             if yy and doy:
-                                prefix = str(year) + "/" + yy + doy +"/"
+####                                prefix = str(year) + "/" + yy + doy +"/"
+                                prefix = str(year) + "/" + doy +"/"
                                 with open(item, 'rb') as data:
                                     bucket.put_object(Key=prefix + item, Body=data)
                                     cls.Logger.info("Successfully added " + item )
