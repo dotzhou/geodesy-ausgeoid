@@ -1,0 +1,11 @@
+0 1 * * * find /home/ted/BNC/clk/ -type f -mtime +1 -exec rm -f {} \;
+0 7 * * * find /home/ted/BNC/rnx/ -type f -mtime +1 -exec rm -f {} \;
+0 2 * * * find /home/ted/BNC/brdc/ -type f -mtime +2 -exec rm -f {} \;
+0 3 * * * find /home/ted/BNC/outbound/ -type l -mtime +1 -exec rm -f {} \;
+0 4 * * * find /home/ted/BNC/archive/ -type f -mtime +1 -exec rm -f {} \;
+0 5 * * * find /home/ted/BNC/archive/ -type d  -size 2c -exec rmdir  {} \;
+0 6 * * * find /home/ted/BNC/logs/ -type f -mtime +7 -exec rm -f {} \;
+2,17,32,47 * * * * /home/ted/BNC/scripts/Converting.sh > /dev/null 2>&1
+4,19,34,49 * * * * /home/ted/BNC/scripts/Disseminating.sh > /dev/null 2>&1
+11,26,41,56 * * * * /home/ted/BNC/scripts/ManageProcess.sh > /dev/null 2>&1
+7,22,37,52 * * * * /home/ted/BNC/scripts/CheckSourceTable.sh > /dev/null 2>&1
