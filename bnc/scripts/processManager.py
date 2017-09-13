@@ -123,7 +123,3 @@ def main():
 if __name__ == '__main__':
     main()
 
-<<<<<<< HEAD
-=======
-
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221

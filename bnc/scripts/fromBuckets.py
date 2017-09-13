@@ -32,20 +32,14 @@ class Shared(object):
 
         if cls.Logger == None:
             cls.Logger = logging.getLogger(__name__)
-<<<<<<< HEAD
       
         for handler in cls.Logger.handlers[:]:  
-=======
-
-        for handler in cls.Logger.handlers[:]:
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
             cls.Logger.removeHandler(handler)
 
         if cls.Verbose:
             cls.Logger.setLevel(logging.DEBUG)
         else:
             cls.Logger.setLevel(logging.ERROR)
-<<<<<<< HEAD
     
         formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                                       datefmt='%Y-%m-%d %I:%M:%S %p')
@@ -53,15 +47,6 @@ class Shared(object):
         fh = logging.handlers.RotatingFileHandler(args.log, 
                                                   mode='a', 
                                                   maxBytes=65535, 
-=======
-
-        formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                                      datefmt='%Y-%m-%d %I:%M:%S %p')
-
-        fh = logging.handlers.RotatingFileHandler(args.log,
-                                                  mode='a',
-                                                  maxBytes=65535,
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                                                   backupCount=7)
         fh.setFormatter(formatter)
         cls.Logger.addHandler(fh)
@@ -77,27 +62,16 @@ class Shared(object):
                 instance_id = text.strip()
                 if len(instance_id) <= 0:
                     raise
-<<<<<<< HEAD
                 
-=======
-
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                 ec2 = boto3.resource('ec2')
                 instance = ec2.Instance(instance_id)
                 for tag in instance.tags:
                     if tag["Key"].lower() == 'table':
                         table = tag["Value"]
-<<<<<<< HEAD
                         return table 
 
         except:
             cls.Logger.error("Failed to get instance id from instance id file" 
-=======
-                        return table
-
-        except:
-            cls.Logger.error("Failed to get instance id from instance id file"
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                              + instance_id_file)
 
         return ''
@@ -109,17 +83,10 @@ class Shared(object):
         points = ''
 
         try:
-<<<<<<< HEAD
             casterUrl = re.compile(r'^(casterUrlList=http:)(?P<value>.*)$', 
                                    re.IGNORECASE)
 
             mountPoints = re.compile(r'^(mountPoints=).*$', 
-=======
-            casterUrl = re.compile(r'^(casterUrlList=http:)(?P<value>.*)$',
-                                   re.IGNORECASE)
-
-            mountPoints = re.compile(r'^(mountPoints=).*$',
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                                      re.IGNORECASE)
 
             with open(ini_file, 'r') as ini:
@@ -132,11 +99,7 @@ class Shared(object):
 
                     ok = re.match(mountPoints, line)
                     if ok:
-<<<<<<< HEAD
                         points = line.strip() 
-=======
-                        points = line.strip()
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                         next
 
                 ini.close()
@@ -165,7 +128,6 @@ class Shared(object):
             bucket_name = 'auscors-ntrip-config'
             bucket_key = 'sourcetable.dat'
             source_table = 'sourcetable.dat'
-<<<<<<< HEAD
             timestamp = modify_time(ini_file) 
 ####            timestamp = datetime.datetime(2015, 8, 18)
 
@@ -173,15 +135,6 @@ class Shared(object):
             response = client.get_object(Bucket = bucket_name, 
                                          IfModifiedSince = timestamp, 
                                          Key = bucket_key, 
-=======
-            timestamp = modify_time(ini_file)
-####            timestamp = datetime.datetime(2015, 8, 18)
-
-            client = boto3.client('s3')
-            response = client.get_object(Bucket = bucket_name,
-                                         IfModifiedSince = timestamp,
-                                         Key = bucket_key,
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                                          RequestPayer='requester')
 
             contents = response['Body'].read().split('\n')
@@ -203,11 +156,7 @@ class Shared(object):
                     if rtcm.upper() == 'RAW':
                         continue
 
-<<<<<<< HEAD
                     if countryCode.upper() == 'AUS' or network.upper() == 'SPRGN' or network.upper() == 'ARGN':
-=======
-                    if countryCode.upper() == 'AUS' or network.upper() == 'SPRGN':
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                         mountpoint = data[1]
                         name = mountpoint[0:4]
 
@@ -215,11 +164,7 @@ class Shared(object):
                             continue
 
                         records = {}
-<<<<<<< HEAD
                         records['mountpoint'] = data[1] 
-=======
-                        records['mountpoint'] = data[1]
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                         records['nmea'] = 'no'
                         records['ntrip'] = '1'
                         records['format'] = data[3]
@@ -231,15 +176,9 @@ class Shared(object):
 
                         stations[mountpoint] = records
                         backup[name] = mountpoint[4]
-<<<<<<< HEAD
                    
             sortedStations = sorted(stations)
             total = len(sortedStations)  
-=======
-
-            sortedStations = sorted(stations)
-            total = len(sortedStations)
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
             if total < 100:
                 return
 
@@ -263,11 +202,7 @@ class Shared(object):
             io.write('mountPoints=')
 
             count = 0
-<<<<<<< HEAD
             for key in sortedStations: 
-=======
-            for key in sortedStations:
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                 if count >= upper:
                     count += 1
                     break
@@ -275,11 +210,7 @@ class Shared(object):
                 if count < lower:
                     count += 1
                     continue
-<<<<<<< HEAD
                  
-=======
-
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
                 count += 1
                 records = stations[key]
 
@@ -292,11 +223,7 @@ class Shared(object):
                 io.write(' ' + records['nmea'])
                 io.write(' ' + records['ntrip'])
                 io.write(', ')
-<<<<<<< HEAD
             
-=======
-
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
             text = io.getvalue()
             text = text.strip(", ")
 
@@ -305,15 +232,9 @@ class Shared(object):
             if text != points:
                 old = re.escape(points)
                 replacement = re.escape(text)
-<<<<<<< HEAD
                 cmd = "sed -i 's/" + old + "/" + replacement + "/g' " + ini_file 
 ####                cmd = "sed -i 's/" + old + "/" + replacement + "/g' " + "/tmp/Play/BNC.ini" 
                 os.system(cmd) 
-=======
-                cmd = "sed -i 's/" + old + "/" + replacement + "/g' " + ini_file
-####                cmd = "sed -i 's/" + old + "/" + replacement + "/g' " + "/tmp/Play/BNC.ini"
-                os.system(cmd)
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
 
         except botocore.exceptions.ClientError as e:
             if e.response['Error']['Code'] == "404":
@@ -359,11 +280,7 @@ def main():
     args = parameters()
 
     Shared.Settings(args)
-<<<<<<< HEAD
     
-=======
-
->>>>>>> beae1740357e7f5a9bd9d51310656c8dc550e221
     Shared.FromBuckets(args.target)
 
 
