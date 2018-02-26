@@ -74,10 +74,12 @@ class Shared(object):
 
                                 dest = os.path.join(dirname, crxFile)
                                 link = os.path.join(outbound, crxFile)
+                                aws = os.path.join("/home/ted/BNC/outbound/aws", crxFile)
                                 
                                 if os.path.isfile(crxFile):
                                     shutil.move(crxFile, dest)
                                     os.symlink(dest, link)
+                                    os.symlink(dest, aws)
                                     os.remove(item)
         except:
             cls.Logger.error("Failed to archive files")
