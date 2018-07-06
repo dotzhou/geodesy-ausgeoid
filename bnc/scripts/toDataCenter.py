@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import logging
 import logging.config
 import argparse
@@ -7,6 +13,9 @@ import os
 from ConfigParser import ConfigParser
 from StringIO import StringIO 
 from ftplib import FTP
+
+from instance_lock import InstanceLock
+
 
 ################################################################################
 class Shared(object):
@@ -121,14 +130,22 @@ def main():
 
     Shared.Settings(args)
 
+    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_DATA_CENTER_LOCK__")
+    try:
+        instance_lock.lock()
+    except Exception as e:
+        Shared.Logger.error("Failed to start: " + e.message)
+        sys.exit(-1)
+
     configFile = os.path.join(args.source, "config");
 
     if Shared.Configure(configFile):
         Shared.ToDataCenter(args.source)
 
+    instance_lock.unlock()
+
 
 ################################################################################
 if __name__ == '__main__':
     main()
-
 

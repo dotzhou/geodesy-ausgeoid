@@ -1,10 +1,18 @@
-import boto3
+#!/usr/bin/env python
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import logging
 import logging.config
 import argparse
 import os
 import re
 import shutil
+
+from instance_lock import InstanceLock
+
 
 ################################################################################
 class Shared(object):
@@ -127,8 +135,17 @@ def main():
     args = parameters()
 
     Shared.Settings(args)
+
+    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_ARCHIVE_LOCK__")
+    try:
+        instance_lock.lock()
+    except Exception as e:
+        Shared.Logger.error("Failed to start: " + e.message)
+        sys.exit(-1)
     
     Shared.ToArchive(args)
+
+    instance_lock.unlock()
 
 
 ################################################################################

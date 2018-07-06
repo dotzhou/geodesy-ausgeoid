@@ -18,6 +18,7 @@ where options include:
 
     -f      fullpath for rinex data file
     -e      environment
+    -k      token from OpenAM
 
 USAGE
 
@@ -37,6 +38,9 @@ function validate {
         usage
     fi
 
+    if [[ -z $open_am_token ]]; then
+        usage
+    fi
 }
 
 
@@ -75,19 +79,11 @@ function upload {
         exit 1;
     fi
 
-    jwt=$(curl --insecure -s --user ${clientId}:${clientPassword} \
-               --data "grant_type=password&username=${username}&password=${password}&scope=openid profile" \
-               ${openam_auth_url}/access_token?realm=/ | awk '{ split($0, t, ","); split(t[3], k, ":"); print k[2] }' | tr -d '"')
-
-    if [ ${#jwt} -le 99 ]; then
-        exit -1;
-    fi
-
     if [ -s "$rinex_file" ]; then
         curl --insecure -i -XPUT -H "Content-type: application/octet-stream" \
-             --data-binary @"${rinex_file}" ${aws_api_gateway_url}/submit/"$(basename "$rinex_file")" -H "Authorization: Bearer ${jwt}"
+             --data-binary @"${rinex_file}" ${aws_api_gateway_url}/submit/"$(basename "$rinex_file")" -H "Authorization: Bearer ${open_am_token}"
     else
-        exit -1; 
+        exit -1;
     fi
 }
 
@@ -98,7 +94,7 @@ fi
 
 
 ################################################################################
-while getopts ":h :f: :e:" opt; do
+while getopts ":h :f: :e: :k:" opt; do
     case $opt in
         (h)
             usage
@@ -111,6 +107,9 @@ while getopts ":h :f: :e:" opt; do
             ;;
         (f)
             rinex_file=$OPTARG
+            ;;
+        (k)
+            open_am_token=$OPTARG
             ;;
         (\?)
             echo "" >&2

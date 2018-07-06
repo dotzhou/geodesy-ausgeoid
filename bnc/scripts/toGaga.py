@@ -1,44 +1,35 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import logging
 import logging.config
 import argparse
 import re
+import datetime
 import os
-from multiprocessing import Pool
+import multiprocessing
 import subprocess
 import copy
+import sys
+
+from instance_lock import InstanceLock
+
 
 ################################################################################
 class Argument(object):
+
     def __init__(self, filename, environment):
         self.filename = filename
         self.environment = environment
 
 
 ################################################################################
-def serial(argument):
-    pattern = re.compile(r'HTTP\/1\.1 200 OK', re.IGNORECASE)
-    command = "/home/ted/BNC/scripts/upload2aws.sh -f " + argument.filename + " -e " + argument.environment
-    output = subprocess.check_output(['bash','-c', command])
-    for line in output.splitlines():
-        if re.search(pattern, line):
-            os.remove(argument.filename)
-            return True
+def upload(arg, **kwarg):
+    return Shared.serial(*arg, **kwarg)
 
-    return False
-
-
-################################################################################
-def batch(bunch, environment):
-    if len(bunch) <= 0:
-        return
-
-    arguments = []
-    for filename in bunch:
-        arguments.append(Argument(filename, environment))
-
-    processPool = Pool(len(arguments))
-    processPool.map(serial, arguments)
-    return
 
 ################################################################################
 class Shared(object):
@@ -46,8 +37,19 @@ class Shared(object):
     Logger = None
     Environment = "test"
 
+    Delta = datetime.timedelta(minutes=20)
+    LastEpoch = datetime.datetime.now() - Delta
+
+    Lock = multiprocessing.Lock()
+    Token = ""
+
+    Rinex2DataPattern = re.compile(r'^\w{4}\d{3}\w{1}\d{2}\.\d{2}d\.Z$', re.IGNORECASE)
+    
+    """ for both 200 ok and 202 accepted """
+    StatusPattern = re.compile(r'HTTP\/1\.1 20', re.IGNORECASE)
+
     @classmethod
-    def Settings(cls, args):
+    def settings(cls, args):
         cls.Verbose = args.verbose
         cls.Environment = args.environment
 
@@ -68,36 +70,77 @@ class Shared(object):
         fh.setFormatter(formatter)
         cls.Logger.addHandler(fh)
 
+    def batch(self, bunch, environment):
+        if len(bunch) <= 0:
+            return
 
-    @classmethod
-    def ToAws(cls, dataFolder):
+        arguments = []
+        for filename in bunch:
+            arguments.append(Argument(filename, environment))
+
+        processPool = multiprocessing.Pool(len(arguments))
+        processPool.map(upload, zip([self]*len(arguments), arguments))
+        return
+
+    def serial(self, argument):
+        token = self.get_token() 
+        command = "/home/ted/BNC/scripts/upload_to_aws.sh -f " + argument.filename + " -e " + argument.environment + " -k " + token
+        output = subprocess.check_output(['bash','-c', command])
+        for line in output.splitlines():
+            if re.search(Shared.StatusPattern, line):
+                os.remove(argument.filename)
+                return True
+
+        Shared.Logger.error("[" + argument.filename + "] Failed to upload to AWS")
+        return False
+
+    def to_aws(self, dataFolder):
         old = os.getcwd()
         try:
             os.chdir(dataFolder)
-            RINEX2_DATA = re.compile(r'^\w{4}\d{3}\w{1}\d{2}\.\d{2}d\.Z$', re.IGNORECASE)
             bunch = []
             for item in os.listdir('.'):
                 if os.path.isfile(item):
                     try:
-                        ok = re.match(RINEX2_DATA, item)
+                        ok = re.match(Shared.Rinex2DataPattern, item)
                         if ok:
                             bunch.append(item)
                             if len(bunch) > 9:
                                 another = copy.deepcopy(bunch)
                                 bunch = []
-                                batch(another, cls.Environment)
+                                self.batch(another, Shared.Environment)
                     except OSError:
-                        cls.Logger.error("Failed to open or remove " + item)
+                        Shared.Logger.error("[" + item + "]" + " failed to open or remove")
                     except:
-                        cls.Logger.error("Failed to add " + item)
+                        Shared.Logger.error("[" + item + "]" + " failed to append")
 
             if len(bunch) > 0:
-                batch(bunch, cls.Environment)
+                self.batch(bunch, Shared.Environment)
 
         except:
-            cls.Logger.error("Failed to put file to AWS ")
+            Shared.Logger.error("Failed to put files onto AWS")
+
         finally:
             os.chdir(old)
+
+    def get_token(self):
+        try:
+            Shared.Lock.acquire()
+            token = ""
+            now = datetime.datetime.now()
+            if now < (Shared.LastEpoch + Shared.Delta):
+                token = Shared.Token
+            else: 
+                command = "/home/ted/BNC/scripts/get_token.sh -e " + Shared.Environment
+                token = subprocess.check_output(['bash','-c', command])
+                Shared.LastEpoch = now
+                if len(token) < 100:
+                    raise Exception("Failed to get token from OpenAM")
+        except:
+            Shared.Logger.error("Failed to get token from OpenAM")
+        finally:
+            Shared.Lock.release()
+        return token
 
 
 ################################################################################
@@ -136,14 +179,20 @@ def main():
 
     args = parameters()
 
-    Shared.Settings(args)
+    Shared.settings(args)
+ 
+    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_GAGA_LOCK__")
+    try:
+        instance_lock.lock()
+    except Exception as e:
+        Shared.Logger.error("Failed to start: " + e.message)
+        sys.exit(-1)
 
-    Shared.ToAws(args.source)
+    Shared().to_aws(args.source)
+    instance_lock.unlock()
 
 
 ################################################################################
 if __name__ == '__main__':
     main()
-
-
 

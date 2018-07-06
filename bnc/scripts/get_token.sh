@@ -16,7 +16,6 @@ where options include:
 
     mandatory options:
 
-    -f      fullpath for rinex data file
     -e      environment
 
 USAGE
@@ -29,10 +28,6 @@ USAGE
 ################################################################################
 function validate {
 
-    if [[ -z $rinex_file ]]; then
-        usage
-    fi
-
     if [[ -z $environment ]]; then
         usage
     fi
@@ -42,7 +37,7 @@ function validate {
 
 
 ################################################################################
-function upload {
+function get_token {
 
     case "$environment" in
         ( dev )
@@ -79,15 +74,8 @@ function upload {
                --data "grant_type=password&username=${username}&password=${password}&scope=openid profile" \
                ${openam_auth_url}/access_token?realm=/ | awk '{ split($0, t, ","); split(t[3], k, ":"); print k[2] }' | tr -d '"')
 
-    if [ ${#jwt} -le 99 ]; then
-        exit -1;
-    fi
-
-    if [ -s "$rinex_file" ]; then
-        curl --insecure -i -XPUT -H "Content-type: application/octet-stream" \
-             --data-binary @"${rinex_file}" ${aws_api_gateway_url}/submit/"$(basename "$rinex_file")" -H "Authorization: Bearer ${jwt}"
-    else
-        exit -1; 
+    if [ ${#jwt} -ge 99 ]; then
+        echo ${jwt}
     fi
 }
 
@@ -98,7 +86,7 @@ fi
 
 
 ################################################################################
-while getopts ":h :f: :e:" opt; do
+while getopts ":h :e:" opt; do
     case $opt in
         (h)
             usage
@@ -108,9 +96,6 @@ while getopts ":h :f: :e:" opt; do
             if [[ ${environment} != "dev" && ${environment} != "test" && ${environment} != "prod" ]]; then
                 usage
             fi
-            ;;
-        (f)
-            rinex_file=$OPTARG
             ;;
         (\?)
             echo "" >&2
@@ -127,7 +112,7 @@ done
 
 validate
 
-upload
+get_token
 
 exit 0
 
