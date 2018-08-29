@@ -80,6 +80,8 @@ class Shared(object):
 
         processPool = multiprocessing.Pool(len(arguments))
         processPool.map(upload, zip([self]*len(arguments), arguments))
+        processPool.close()
+        processPool.join()
         return
 
     def serial(self, argument):
@@ -105,7 +107,7 @@ class Shared(object):
                         ok = re.match(Shared.Rinex2DataPattern, item)
                         if ok:
                             bunch.append(item)
-                            if len(bunch) > 9:
+                            if len(bunch) > 19:
                                 another = copy.deepcopy(bunch)
                                 bunch = []
                                 self.batch(another, Shared.Environment)
