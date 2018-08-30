@@ -9,6 +9,7 @@ import logging.config
 import argparse
 import re
 import os
+import sys
 
 from ConfigParser import ConfigParser
 from StringIO import StringIO 
@@ -130,7 +131,7 @@ def main():
 
     Shared.Settings(args)
 
-    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_DATA_CENTER_LOCK__")
+    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_DATA_CENTER_LOCK__", sys.argv[0], 30)
     try:
         instance_lock.lock()
     except Exception as e:

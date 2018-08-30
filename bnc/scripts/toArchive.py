@@ -10,6 +10,7 @@ import argparse
 import os
 import re
 import shutil
+import sys
 
 from instance_lock import InstanceLock
 
@@ -136,7 +137,7 @@ def main():
 
     Shared.Settings(args)
 
-    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_ARCHIVE_LOCK__")
+    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_ARCHIVE_LOCK__", sys.argv[0], 30)
     try:
         instance_lock.lock()
     except Exception as e:

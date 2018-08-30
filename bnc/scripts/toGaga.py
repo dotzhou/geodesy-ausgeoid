@@ -183,7 +183,7 @@ def main():
 
     Shared.settings(args)
  
-    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_GAGA_LOCK__")
+    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_GAGA_LOCK__", sys.argv[0], 30)
     try:
         instance_lock.lock()
     except Exception as e:
