@@ -167,7 +167,7 @@ def parameters():
     options.add_argument("-e", "--environment",
             metavar='test',
             default='test',
-            help='environment: test | dev (default: %(default)s)')
+            help='environment: test | dev | prod (default: %(default)s)')
 
     options.add_argument("-v", "--verbose", help="log verbose information to file",
             action="store_true")
@@ -182,8 +182,8 @@ def main():
     args = parameters()
 
     Shared.settings(args)
- 
-    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_GAGA_LOCK__", sys.argv[0], 30)
+
+    instance_lock = InstanceLock("/home/ted/BNC/logs/.__TO_GAGA_" + args.environment + "_LOCK__", sys.argv[0], 30)
     try:
         instance_lock.lock()
     except Exception as e:

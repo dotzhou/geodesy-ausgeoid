@@ -83,12 +83,18 @@ class Shared(object):
 
                                 dest = os.path.join(dirname, crxFile)
                                 link = os.path.join(outbound, crxFile)
-                                aws = os.path.join("/home/ted/BNC/outbound/aws", crxFile)
+                                aws = os.path.join(args.product, crxFile)
+                                test = None
+                                if args.test:
+                                    test = os.path.join(args.test, crxFile)
                                 
                                 if os.path.isfile(crxFile):
                                     shutil.move(crxFile, dest)
                                     os.symlink(dest, link)
                                     os.symlink(dest, aws)
+                                    if test:
+                                        os.symlink(dest, test)
+                                    
                                     os.remove(item)
         except:
             cls.Logger.error("Failed to archive files")
@@ -117,6 +123,14 @@ def parameters():
     options.add_argument('-o', '--outbound',
             default='/home/ted/BNC/outbound/extnas',
             help='The directory, where rinex data files will be disseminated')
+
+    options.add_argument('-p', '--product',
+            default='/home/ted/BNC/outbound/aws',
+            help='The aws directory, where rinex data files will be disseminated')
+
+    options.add_argument('-q', '--test',
+            metavar='/home/ted/BNC/outbound/test',
+            help='The test directory, where rinex data files will be disseminated')
 
     options.add_argument("-g", "--log",
             metavar='/home/ted/BNC/logs/toArchive.log',
